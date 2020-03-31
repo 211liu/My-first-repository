@@ -39,6 +39,7 @@ Go to your new repository hello-world.
 Click the drop down at the top of the file list that says branch: master.
 Type a branch name, readme-edits, into the new branch text box.
 Select the blue Create branch box or hit “Enter” on your keyboard.
+
 Step 3. Make and commit changes
 Bravo! Now, you’re on the code view for your readme-edits branch, which is a copy of master. Let’s make some edits.
 
