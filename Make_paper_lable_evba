@@ -1,0 +1,266 @@
+Option Base 1
+
+'描述：整个软件系统的主进程
+'功能：根据省数据报表格式，返回按要求的做卷word文档
+'参数：需导入省数据报表，需要有科目、考点、相应试卷数、科目考试时间
+Sub MainSub(rng As Ranges)
+    
+    '描述：模块1，
+    '功能：省数据报表导入，返回考点没有进行分行操作的表格（也就是考场数都是一捆的情况）
+    '参数：需导入省数据报表，需要有科目、考点、相应试卷数、科目考试时间
+    Call part1(rng)
+    
+    '描述：模块2，
+    '功能：导入没有进行分行操作表格，按不同的种类规则，返回考点进行分行操作的表格
+    '参数：需导入分行操作报表，需要有科目、考点、相应试卷数、科目考试时间
+    '描述：模块3，
+    '功能：试卷规范生成表和答题纸规范生成表导入，返回的
+    '也就是在试卷表和答题纸表中备用字段中有标注，表示试卷和答题纸数为个位数合并在一起
+    '参数：需导入省数据报表，需要有科目、考点、相应试卷数、科目考试时间
+    '原模块3的内容合在模块2里面去了
+    Call part2(rng)
+    
+
+    '描述：模块3，
+    '功能：不规范的试卷表、答题纸表、和规范的备用试卷、答题纸报表导入，返回
+    '生成好的word文档
+    '参数：需导入不规范的试卷表、答题纸表、和规范的备用试卷、答题纸报表
+    Call part3(rng)
+    
+    
+End Sub
+
+
+
+'此过程用于函数功能的测试使用，在主程序中是不使用的
+Sub MainTest()
+
+End Sub
+
+Sub part1()
+'生成表格中，每行都用颜色标注
+
+
+End Sub
+
+
+
+
+'以下均为part2()相关函数
+
+
+'注函数返回值为数组时，应在返回值中加小括号，
+'temp(1)插入行数，temp(2)最后一行的填充数，temp(3)每捆的基数
+Public Function NumSplit(ExamRoomNum As Integer, BaseNum As Integer) As Integer()
+On Error GoTo a
+    Dim temp(3) As Integer
+    temp(3) = BaseNum
+    temp(1) = ExamRoomNum \ BaseNum
+    temp(2) = ExamRoomNum Mod BaseNum
+    NumSplit = temp
+  Exit Function
+a:    MsgBox "程序出错了！"
+End Function
+
+'注插入行数 ILNum 插入行数 Lid 插入的行号；插入相应行数
+Public Function InsertLineNum(ByVal ILNum As Integer, ByVal Lid As Integer)
+    
+On Error GoTo a
+    
+    Dim rng As Ranges
+    Rows(Lid & ":" & Lid).Select
+    For i = 1 To ILNum
+    
+        Selection.Insert Shift:=xlDown
+    Next i
+    Exit Function
+a:    MsgBox "程序出错了！"
+
+End Function
+'函数自动生成捆数编码，并自动填充   Lid 插入的行号 InsertLineNum 插入行数
+'这里自动默认是C列是捆数列，以后这里可以用参数控制
+'还有这里所有函数没有写异常项，在以后的运行过程中会出现程序跑坏的情况
+'所以还有异常控制也要进行增加
+'要写把数量写在袋数编号上H列，并且每袋数数据G也在写完
+Public Function BundleCodeStuff(Lid As Integer, InsertLineNum As Integer, LastFillNum As Integer, FillBaseNum As Integer)
+On Error GoTo a
+    Dim CountNum As Integer
+    CountNum = InsertLineNum + 1
+    For i = 1 To CountNum
+        '袋数编号自动生成
+        Range("h" & (Lid - 1 + i)).Value = CountNum & "---" & i
+        '每袋数自动生成
+        If i = CountNum Then
+          Range("g" & (Lid - 1 + i)).Value = LastFillNum
+        Else
+          Range("g" & (Lid - 1 + i)).Value = FillBaseNum
+        End If
+    Next i
+    Exit Function
+a:    MsgBox "程序出错了！"
+
+End Function
+
+
+'函数自动完成“序号”、“类别”、“考点”、“科目”、“考试时间”字段填写
+'前题是考场总数字段不为0的行中，相应的数据都已经有，填充的是新插入的行的相关数据
+'序号要自动计数，a-e,i-k列，chr(97)=a
+'因为它是向上填充的
+Public Function AutoFillField(Lid As Integer, InsertLineNum As Integer)
+
+    On Error GoTo a
+    Dim i As Integer
+    '只做插入行数循环就可以了，因为最后一次循环是自已给自己赋值
+    For i = 0 To InsertLineNum - 1
+        'a-e,i-k
+        Range("a" & (Lid + i)).Value = Range("a" & (Lid + InsertLineNum)).Value
+        Range("b" & (Lid + i)).Value = Range("b" & (Lid + InsertLineNum)).Value
+         Range("c" & (Lid + i)).Value = Range("c" & (Lid + InsertLineNum)).Value
+        Range("d" & (Lid + i)).Value = Range("d" & (Lid + InsertLineNum)).Value
+          Range("e" & (Lid + i)).Value = Range("e" & (Lid + InsertLineNum)).Value
+        Range("i" & (Lid + i)).Value = Range("i" & (Lid + InsertLineNum)).Value
+         Range("j" & (Lid + i)).Value = Range("j" & (Lid + InsertLineNum)).Value
+        Range("k" & (Lid + i)).Value = Range("k" & (Lid + InsertLineNum)).Value
+ 
+        Range("f" & (Lid + i)).Value = Range("f" & (Lid + InsertLineNum)).Value
+        'Range("c" & (Lid - 1 + i)).Value = CountNum & "---" & i
+    Next i
+    Exit Function
+a:    MsgBox "程序出错了！"
+
+End Function
+
+'描述：excel文件薄另存为函数
+'功能：根据生成的规范excel表格格式，返回按文件名要求的生成的规范excel表格工作薄
+'参数：参数FilePath表示保存路径，参数SaveAsFileName 表示保存文件名
+Public Function StandardExcelSaveAS(FilePath As String, SaveAsFileName As String)
+      '   ChDir "D:\宁波教育考试中心资料2019.1.2\考试院自动化处理实例\4、做卷自动生成"
+  '  ActiveWorkbook.SaveAs Filename:= _
+        "D:\宁波教育考试中心资料2019.1.2\考试院自动化处理实例\4、做卷自动生成\XX年X月XX考试试卷做卷规范表.xls", FileFormat:=xlExcel8, _
+        Password:="", WriteResPassword:="", ReadOnlyRecommended:=False, _
+        CreateBackup:=False
+   '以上为实例
+        'Dim sht As Worksheet
+        '当前工作表拷贝一份
+        ActiveSheet.Copy
+        ChDir FilePath
+        ActiveWorkbook.SaveAs Filename:=FilePath & SaveAsFileName, FileFormat:=xlExcel8, _
+             Password:="", WriteResPassword:="", ReadOnlyRecommended:=False, _
+             CreateBackup:=False
+End Function
+
+'描述：生成捆数表格函数
+'功能：根据种类是试卷、答题纸和备用试卷、答题纸，返回生成捆数的表格
+'参数：参数BaseNumArr表示各种类型的捆数基数，参数TypeOfPaper 表示种类
+'默认捆数基数为，试卷 20 答题纸 50  备用试卷、答题纸 30
+Public Function BuildBundleTable(BaseNumArr As Integer, TypeOfPaper As String)
+
+Dim hzs As Integer
+   Dim i As Integer
+   Dim SerialNum As Integer
+   Dim LastFillNum As Integer
+   Dim FillBaseNum As Integer
+   Dim BaseNum As Integer
+ '默认捆数基数为，试卷 20 答题纸 30  备用试卷、答题纸 30
+ 
+  If BaseNumArr = 0 Then
+    Select Case Range("j2").Value
+        Case "试卷"
+              '按种类生成相应捆数基数
+             BaseNum = 10
+        Case "答题纸"
+             '按种类生成相应捆数基数
+             BaseNum = 30
+        Case "备用试卷、答题纸"
+              '按种类生成相应捆数基数
+             BaseNum = 30
+      End Select
+  End If
+'此处的i表示整个表格的长度
+   i = 2
+     
+   '读取考场总数,判断序号数为空停止循环serial_num,i=2开始，考场总数号在F列
+   Do While Range("A" & i).Value <> ""
+    '如果考场总数不为空，就执行插入，填充内容操作
+     
+     SerialNum = Int(Range("F" & i).Value)
+     'part3()部分可以在这里和part2()合并，加判断考试总数<=10时，在合并字段中标准1
+     '表示试卷和答题纸打印word时是要合并的。并且种类不能为备用卷
+     '要合并的赋1，不要合并的为空
+    If SerialNum <= 10 And Range("i2").Value <> "备用试卷、答题纸" Then
+        Range("k" & i).Value = 1
+      
+    End If
+    If SerialNum <> 0 Then
+            'hzs 表示插入行数
+            hzs = NumSplit(SerialNum, BaseNum)(1)
+            '最后一行填充数
+            LastFillNum = NumSplit(SerialNum, BaseNum)(2)
+            '填充基数
+            FillBaseNum = NumSplit(SerialNum, BaseNum)(3)
+            '插入hzs的行数
+            Call InsertLineNum(hzs, i)
+            '填充相应捆数
+            Call BundleCodeStuff(i, hzs, LastFillNum, FillBaseNum)
+            '自动完成“序号”、“类别”、“考点”、“科目”、“考试时间”字段填写
+            Call AutoFillField(i, hzs)
+    
+    End If
+        '序号值向下走
+        i = i + hzs + 1
+   Loop
+      '序号为空时，表示表格结束，表示程序结束
+      '弹出对话框提示结束，
+      MsgBox "完成"
+
+End Function
+
+
+
+Sub part2()
+On Error GoTo a
+   
+   
+   Dim FilePath As String
+   Dim SaveAsFileName As String
+   
+  
+   '另存的路径
+   FilePath = "D:\宁波教育考试中心资料2019.1.2\2019\高招科\成人高考\考前资料\2019成考做卷\"
+   
+   '另存为的文件名
+   'SaveAsFileName = "2019年1月XXX考试试卷做卷规范表.xls"
+   
+   
+      '根据种类字段判断，另存为的表格类型
+      '只需要判断I2单元格中的数据为试卷、答题纸、或者备用试卷、答题纸
+      '给出不同的SaveAsFileName 的值就可以了
+      '自动另存为“XX年X月XX考试试卷做卷规范表.xls”
+      '或者另存为“XX年X月XX考试答题纸做卷规范表.xls”
+      '或者另存为“XX年X月XX考试备用试卷、答题纸做卷规范表.xls”
+      Select Case Range("j2").Value
+        Case "试卷"
+              '按种类生成相应捆数表格
+             Call BuildBundleTable(0, "试卷")
+             SaveAsFileName = "XX年X月XX考试试卷做卷表.xls"
+        Case "答题纸"
+              '按种类生成相应捆数表格
+             Call BuildBundleTable(0, "答题纸")
+             SaveAsFileName = "XX年X月XX考试答题纸做卷表.xls"
+        Case "备用试卷、答题纸"
+              '按种类生成相应捆数表格
+             Call BuildBundleTable(0, "备用试卷、答题纸")
+             SaveAsFileName = "XX年X月XX考试备用试卷、答题纸做卷表.xls"
+        Case Else
+             MsgBox "表格总类出错！"
+      End Select
+      Call StandardExcelSaveAS(FilePath, SaveAsFileName)
+
+   
+       Exit Sub
+a:    MsgBox "程序出错了！"
+
+End Sub
+
+
+
