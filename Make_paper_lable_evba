@@ -85,7 +85,9 @@ End Function
 Public Function BundleCodeStuff(Lid As Integer, InsertLineNum As Integer, LastFillNum As Integer, FillBaseNum As Integer)
 On Error GoTo a
     Dim CountNum As Integer
-    CountNum = InsertLineNum + 1
+   if LastFillNum = 0 then CountNum=InsertLineNum
+   else CountNum = InsertLineNum + 1
+   end if 
     For i = 1 To CountNum
         '袋数编号自动生成
         Range("h" & (Lid - 1 + i)).Value = CountNum & "---" & i
