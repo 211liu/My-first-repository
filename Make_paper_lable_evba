@@ -85,14 +85,20 @@ End Function
 Public Function BundleCodeStuff(Lid As Integer, InsertLineNum As Integer, LastFillNum As Integer, FillBaseNum As Integer)
 On Error GoTo a
     Dim CountNum As Integer
-   if LastFillNum = 0 then CountNum=InsertLineNum
-   else CountNum = InsertLineNum + 1
-   end if 
+    
+    
+    If (LastFillNum = 0) Then
+        CountNum = InsertLineNum
+    Else
+        CountNum = InsertLineNum + 1
+    End If
+    
+   
     For i = 1 To CountNum
         '袋数编号自动生成
         Range("h" & (Lid - 1 + i)).Value = CountNum & "---" & i
         '每袋数自动生成
-        If i = CountNum Then
+        If (i = CountNum) And (LastFillNum <> 0) Then
           Range("g" & (Lid - 1 + i)).Value = LastFillNum
         Else
           Range("g" & (Lid - 1 + i)).Value = FillBaseNum
@@ -194,18 +200,34 @@ Dim hzs As Integer
       
     End If
     If SerialNum <> 0 Then
-            'hzs 表示插入行数
-            hzs = NumSplit(SerialNum, BaseNum)(1)
+            
             '最后一行填充数
             LastFillNum = NumSplit(SerialNum, BaseNum)(2)
-            '填充基数
-            FillBaseNum = NumSplit(SerialNum, BaseNum)(3)
-            '插入hzs的行数
-            Call InsertLineNum(hzs, i)
-            '填充相应捆数
-            Call BundleCodeStuff(i, hzs, LastFillNum, FillBaseNum)
-            '自动完成“序号”、“类别”、“考点”、“科目”、“考试时间”字段填写
-            Call AutoFillField(i, hzs)
+            '如果最后一行的填充数是０，代表完全整除，hzs 插入行数要减一的；
+            
+            'hzs 表示插入行数
+            If LastFillNum = 0 Then
+                hzs = NumSplit(SerialNum, BaseNum)(1) - 1
+                '填充基数
+                FillBaseNum = NumSplit(SerialNum, BaseNum)(3)
+                '插入hzs的行数
+                Call InsertLineNum(hzs, i)
+                '填充相应捆数
+                Call BundleCodeStuff(i, hzs + 1, LastFillNum, FillBaseNum)
+                '自动完成“序号”、“类别”、“考点”、“科目”、“考试时间”字段填写
+                Call AutoFillField(i, hzs)
+            Else
+                hzs = NumSplit(SerialNum, BaseNum)(1)
+            
+                '填充基数
+                FillBaseNum = NumSplit(SerialNum, BaseNum)(3)
+                '插入hzs的行数
+                Call InsertLineNum(hzs, i)
+                '填充相应捆数
+                Call BundleCodeStuff(i, hzs, LastFillNum, FillBaseNum)
+                '自动完成“序号”、“类别”、“考点”、“科目”、“考试时间”字段填写
+                Call AutoFillField(i, hzs)
+            End If
     
     End If
         '序号值向下走
@@ -228,7 +250,9 @@ On Error GoTo a
    
   
    '另存的路径
-   FilePath = "D:\宁波教育考试中心资料2019.1.2\2019\高招科\成人高考\考前资料\2019成考做卷\"
+   '2020.4.13号改
+   'FilePath = "D:\宁波教育考试中心资料2019.1.2\2019\高招科\成人高考\考前资料\2019成考做卷\"
+   FilePath = Range("参数!d2").Value
    
    '另存为的文件名
    'SaveAsFileName = "2019年1月XXX考试试卷做卷规范表.xls"
@@ -244,7 +268,9 @@ On Error GoTo a
         Case "试卷"
               '按种类生成相应捆数表格
              Call BuildBundleTable(0, "试卷")
-             SaveAsFileName = "XX年X月XX考试试卷做卷表.xls"
+             'SaveAsFileName = "XX年X月XX考试试卷做卷表.xls"
+             SaveAsFileName = Range("参数!e2").Value
+             
         Case "答题纸"
               '按种类生成相应捆数表格
              Call BuildBundleTable(0, "答题纸")
@@ -263,6 +289,3 @@ On Error GoTo a
 a:    MsgBox "程序出错了！"
 
 End Sub
-
-
-
