@@ -83,7 +83,7 @@ Public Function ExaminiationPoint_ary(ByVal ExaminiationPoint_num As Integer) As
    
   For i = 1 To ExaminiationPoint_num
     
-    ttt(i) = Range("测试样本!A" & (i + 1)).Value
+    ttt(i) = Range("测试样本!A" & (i + 2)).Value
      
   Next i
     ExaminiationPoint_ary = ttt
@@ -122,9 +122,14 @@ Public Sub Cover_form(ByVal Course_num As Integer, ByVal ExaminiationPoint_num A
         flag = flag + 1
         Range("工作区１!a" & flag).Value = flag - 1
         '赋值相应的类别
-        '赋值相应的时间
+        Range("工作区１!b" & (j + 1 + ExaminiationPoint_num * (i - 1))).Value = Range("参数!b2").Value
+        '赋值相应的时间，有问题需要处理
+        Range("工作区１!i" & (j + 1 + ExaminiationPoint_num * (i - 1))).Value = Range("测试样本!" & Chr(97 + i) & "20").Value
         '赋值相应的考场总数（里面加个验证函数exact）
-        '赋值相应总类
+        Range("工作区１!f" & (j + 1 + ExaminiationPoint_num * (i - 1))).Value = Range("测试样本!" & Chr(97 + i) & (j + 2)).Value
+        
+        '赋值相应种类
+        Range("工作区１!j" & (j + 1 + ExaminiationPoint_num * (i - 1))).Value = Range("参数!c2").Value
     Next j
  
  Next i
@@ -134,6 +139,7 @@ End Sub
 
 '调用转换表格过程，转换表格
 Sub part1()
+On Error GoTo a
 Dim Course_num, ExaminiationPoint_num As Integer
 '获取科目数
 Course_num = Int(Range("参数!h2").Value)
@@ -141,7 +147,9 @@ Course_num = Int(Range("参数!h2").Value)
 ExaminiationPoint_num = Int(Range("参数!g2").Value)
 '调用转换表格过程，转换表格
 Call Cover_form(Course_num, ExaminiationPoint_num)
+Exit Sub
 
+a:    MsgBox "程序出错了！"
 End Sub
 
 
@@ -390,8 +398,3 @@ On Error GoTo a
 a:    MsgBox "程序出错了！"
 
 End Sub
-
-
-
-
-
