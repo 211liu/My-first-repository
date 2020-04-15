@@ -8,6 +8,11 @@ Sub MainSub(rng As Ranges)
     '描述：模块1，
     '功能：省数据报表导入，返回考点没有进行分行操作的表格（也就是考场数都是一捆的情况）
     '参数：需导入省数据报表，需要有科目、考点、相应试卷数、科目考试时间
+    
+    '测试转格式操作
+     '描述：模块1，
+    '功能：把测试样表转化为工作区表所需要格式
+    '参数：需导入省数据报表，需要有科目、考点、相应试卷数、科目考试时间
     Call part1(rng)
     
     '描述：模块2，
@@ -34,12 +39,108 @@ End Sub
 
 '此过程用于函数功能的测试使用，在主程序中是不使用的
 Sub MainTest()
+   ' Course_num = Int(Range("参数!h2").Value)
+    ' ttt = Course_ary(Course_num)(1)
+    
+   ExaminiationPoint_num = Int(Range("参数!g2").Value)
+     ttt = ExaminiationPoint_ary(ExaminiationPoint_num)(1)
+    
+     MsgBox ttt
+    
+End Sub
+
+'此说明以下，为part1()相关函数
+
+'描述：把测试样本表所有考试科目赋给此数组函数，返回字符串;
+'功能：把测试样本表所有考试科目赋给此数组函数，返回字符串
+'参数：Course_num　总共有多少科目数
+Public Function Course_ary(ByVal Course_num As Integer) As String()
+      
+      'ttt　生成一个字符串数组临时变量，并开辟２０字符空间
+      '最后把　ttt变量地址赋给函数即可
+      
+      Dim ttt(20) As String
+      
+     ' Course_num = Range("参数!h2").Value
+   
+  For i = 1 To Course_num
+    
+    ttt(i) = Range("测试样本!" & Chr(97 + i) & "1").Value
+     
+  Next i
+    Course_ary = ttt
+
+End Function
+
+'描述：把测试样本表所有考点名称赋给此数组函数，返回字符串;
+'功能：把测试样本表所有考点名称赋给此数组函数，返回字符串
+'参数：ExaminiationPoint_num 　总共有多少考点数
+Public Function ExaminiationPoint_ary(ByVal ExaminiationPoint_num As Integer) As String()
+    'ttt　生成一个字符串数组临时变量，并开辟２０字符空间
+      '最后把　ttt变量地址赋给函数即可
+      
+      Dim ttt(20) As String
+   
+  For i = 1 To ExaminiationPoint_num
+    
+    ttt(i) = Range("测试样本!A" & (i + 1)).Value
+     
+  Next i
+    ExaminiationPoint_ary = ttt
+
+End Function
+
+'描述：把测试样本表转为工作区所需表;
+'功能：把测试样本表转为工作区所需表
+'参数：Course_num　总共有多少科目数和ExaminiationPoint_num 　总共有多少考点数
+Public Sub Cover_form(ByVal Course_num As Integer, ByVal ExaminiationPoint_num As Integer)
+ 'flag 表示序号赋值用
+ Dim flag As Integer
+ Dim i, j As Integer
+
+ Dim ex_tt(20) As String
+ Dim cou_tt(20) As String
+ For i = 1 To Course_num
+    cou_tt(i) = Course_ary(Course_num)(i)
+ Next i
+ For i = 1 To ExaminiationPoint_num
+    ex_tt(i) = ExaminiationPoint_ary(ExaminiationPoint_num)(i)
+ Next i
+ flag = 1
+ 
+ '按科目数组顺序循环赋值
+ For i = 1 To Course_num
+     '按考点数组顺序循环赋值
+    For j = 1 To ExaminiationPoint_num
+        '把考点内容赋值过去
+        Range("工作区１!c" & (j + 1 + ExaminiationPoint_num * (i - 1))).Value = ex_tt(j)
+    
+        '把相应的科目内容赋值过去
+        Range("工作区１!e" & (j + 1 + ExaminiationPoint_num * (i - 1))).Value = cou_tt(i)
+        
+        '赋值相应的序号
+        flag = flag + 1
+        Range("工作区１!a" & flag).Value = flag - 1
+        '赋值相应的类别
+        '赋值相应的时间
+        '赋值相应的考场总数（里面加个验证函数exact）
+        '赋值相应总类
+    Next j
+ 
+ Next i
+
 
 End Sub
 
+'调用转换表格过程，转换表格
 Sub part1()
-'生成表格中，每行都用颜色标注
-
+Dim Course_num, ExaminiationPoint_num As Integer
+'获取科目数
+Course_num = Int(Range("参数!h2").Value)
+'获取考点数
+ExaminiationPoint_num = Int(Range("参数!g2").Value)
+'调用转换表格过程，转换表格
+Call Cover_form(Course_num, ExaminiationPoint_num)
 
 End Sub
 
@@ -289,3 +390,8 @@ On Error GoTo a
 a:    MsgBox "程序出错了！"
 
 End Sub
+
+
+
+
+
